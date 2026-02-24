@@ -3,20 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>寬悅團隊系統 - 雲端版</title>
+    <title>寬悅團隊系統 - 安全雲端版</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <style>
         :root { --main-orange: #ff4500; --bg-light: #f4f6f9; --danger: #e74c3c; }
         body { font-family: 'Microsoft JhengHei', sans-serif; background: var(--bg-light); margin: 0; display: flex; min-height: 100vh; }
+        
+        /* 登入頁面 */
         #loginPage { position: fixed; inset: 0; background: var(--main-orange); display: flex; justify-content: center; align-items: center; z-index: 2000; }
         .login-box { background: white; padding: 40px; border-radius: 15px; text-align: center; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .login-box input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        
+        /* 側邊欄 */
         .sidebar { width: 220px; background: white; border-right: 1px solid #ddd; position: fixed; height: 100%; display: flex; flex-direction: column; padding-top: 20px; }
         .user-tag { padding: 15px 20px; border-bottom: 1px solid #eee; margin-bottom: 10px; }
         .nav-label { padding: 0 20px; font-size: 11px; color: #999; margin-bottom: 5px; font-weight: bold; }
         .tab-btn { width: 100%; padding: 12px 20px; border: none; background: none; text-align: left; cursor: pointer; color: #555; font-weight: bold; border-left: 5px solid transparent; }
         .tab-btn.active { background: #fff0eb; color: var(--main-orange); border-left-color: var(--main-orange); }
+
+        /* 主內容 */
         .main-content { margin-left: 220px; flex: 1; display: flex; flex-direction: column; }
         header { background: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
         .container { padding: 25px; }
@@ -24,13 +30,16 @@
         th { background: #fff5f0; color: var(--main-orange); padding: 15px; text-align: left; font-size: 14px; }
         td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
         tr:hover { background: #fffaf8; cursor: pointer; }
+
+        /* Modal 彈窗 */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: white; width: 95%; max-width: 800px; padding: 30px; border-radius: 15px; position: relative; max-height: 90vh; overflow-y: auto; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         .form-group { display: flex; flex-direction: column; margin-bottom: 10px; }
         .form-group label { font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #333; }
-        .form-group input, .form-group select { padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .form-group input, .form-group select, .form-group textarea { padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
         .readonly-val { font-size: 15px; font-weight: bold; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; color: #222; }
+
         .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-orange { background: var(--main-orange); color: white; }
         .btn-blue { background: #3498db; color: white; width: 100%; }
@@ -60,6 +69,7 @@
         <button class="tab-btn" onclick="setTab('cooperation', this)">🤝 合作物件</button>
         <button class="tab-btn" style="margin-top:auto; color:#ccc;" onclick="location.reload()">🚪 登出系統</button>
     </div>
+
     <div class="main-content">
         <header><h2 id="pageTitle">我的開發清單</h2><button class="btn btn-orange" onclick="openAddModal()">＋ 新增開發案件</button></header>
         <div class="container"><table><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table></div>
@@ -69,6 +79,7 @@
 <div id="caseModal" class="modal">
     <div class="modal-content">
         <span style="position:absolute; right:20px; top:15px; cursor:pointer; font-size:24px;" onclick="closeModal()">&times;</span>
+        
         <div id="viewMode">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h3 id="v_case_name" style="color:var(--main-orange); margin:0;"></h3>
@@ -92,6 +103,7 @@
                 <div id="noteInput"><textarea id="new_note" style="width:100%; border:1px solid #ddd;"></textarea><button class="btn btn-orange" style="width:100%; margin-top:5px;" onclick="addNote()">儲存筆記</button></div>
             </div>
         </div>
+
         <div id="editMode" style="display:none;">
             <h3 style="color:var(--main-orange);">案件資料錄入</h3>
             <div class="form-group"><label>案名</label><input type="text" id="m_case_name"></div>
@@ -104,7 +116,15 @@
             <div class="form-group"><label>戶籍地址</label><input type="text" id="m_h_addr"></div>
             <div class="form-row">
                 <div class="form-group"><label>房屋坪數</label><input type="number" id="m_size" oninput="calcUnit()"></div>
-                <div class="form-group"><label>車位形式</label><select id="m_p_type"><option value="無">無</option><option value="坡道平面">坡道平面</option><option value="坡道機械">坡道機械</option><option value="機械平面">機械平面</option><option value="機械機械">機械機械</option></select></div>
+                <div class="form-group"><label>車位形式</label>
+                    <select id="m_p_type">
+                        <option value="無">無</option>
+                        <option value="坡道平面">坡道平面</option>
+                        <option value="坡道機械">坡道機械</option>
+                        <option value="機械平面">機械平面</option>
+                        <option value="機械機械">機械機械</option>
+                    </select>
+                </div>
             </div>
             <div class="form-row">
                 <div class="form-group"><label>總價(萬)</label><input type="number" id="m_total" oninput="calcUnit()"></div>
@@ -112,7 +132,14 @@
             </div>
             <div class="form-row">
                 <div class="form-group"><label>拆算單價(萬/坪)</label><input type="text" id="m_unit" readonly style="background:#fff9e6"></div>
-                <div class="form-group"><label>目前狀態</label><select id="m_status"><option value="tracking">追蹤中</option><option value="signed">委託中</option><option value="sold">已售出</option><option value="cooperation">🤝 合作物件 (公開)</option></select></div>
+                <div class="form-group"><label>目前狀態</label>
+                    <select id="m_status">
+                        <option value="tracking">追蹤中</option>
+                        <option value="signed">委託中</option>
+                        <option value="sold">已售出</option>
+                        <option value="cooperation">🤝 合作物件 (公開)</option>
+                    </select>
+                </div>
             </div>
             <button class="btn btn-orange" style="width:100%; margin-top:10px;" onclick="saveCase()">儲存並送出</button>
             <button class="btn" style="width:100%; margin-top:5px; background:#ddd;" onclick="switchToView()">取消</button>
@@ -121,7 +148,7 @@
 </div>
 
 <script>
-    // --- 1. Firebase 初始化 (請填入你的金鑰) ---
+    // --- 1. Firebase 初始化 ---
     const firebaseConfig = {
         apiKey: "AIzaSyAvJmCv72H9Ic5taR7YCqwsU3kEgEV218g",
         authDomain: "kuanyue-crm.firebaseapp.com",
@@ -134,40 +161,44 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('kyCases_Cloud');
 
-    // --- 2. 使用者設定 ---
-    const users = [
-        {acc:'admin', pass:'1234', role:'admin'},
-        {acc:'user1', pass:'1234', role:'staff'},
-        {acc:'user2', pass:'1234', role:'staff'},
-        {acc:'user3', pass:'1234', role:'staff'},
-        {acc:'user4', pass:'1234', role:'staff'}
-    ];
-
     let cases = [];
-    let caseKeys = []; // 紀錄 Firebase 的隨機 Key
+    let caseKeys = []; 
     let currentUser = null;
     let currentIdx = null;
     let currentFilter = 'all';
 
-    // --- 3. 核心邏輯 ---
-    function handleLogin() {
+    // --- 2. 安全登入驗證 (從資料庫抓取) ---
+    async function handleLogin() {
         const acc = document.getElementById('loginAcc').value;
-        const user = users.find(u => u.acc === acc && u.pass === document.getElementById('loginPass').value);
-        if (user) {
-            currentUser = user;
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'flex';
-            document.getElementById('displayUser').innerText = user.acc + (user.role==='admin'?' (管理員)':'');
-            // 監聽 Firebase 資料庫即時更新
-            db.on('value', (snapshot) => {
-                const data = snapshot.val();
-                cases = data ? Object.values(data) : [];
-                caseKeys = data ? Object.keys(data) : [];
-                renderTable();
-            });
-        } else alert("帳號或密碼錯誤");
+        const pass = document.getElementById('loginPass').value;
+
+        if (!acc || !pass) { alert("請輸入帳號密碼"); return; }
+
+        const userRef = firebase.database().ref('users/' + acc);
+        try {
+            const snapshot = await userRef.once('value');
+            const userData = snapshot.val();
+
+            if (userData && userData.pass === pass) {
+                currentUser = { acc: acc, ...userData };
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'flex';
+                document.getElementById('displayUser').innerText = acc + (userData.role==='admin'?' (管理員)':'');
+                
+                // 登入後啟動監聽
+                db.on('value', (snap) => {
+                    const data = snap.val();
+                    cases = data ? Object.values(data) : [];
+                    caseKeys = data ? Object.keys(data) : [];
+                    renderTable();
+                });
+            } else {
+                alert("帳號或密碼錯誤");
+            }
+        } catch (e) { alert("讀取權限失敗"); }
     }
 
+    // --- 3. 核心邏輯 (其餘功能不變) ---
     function renderTable() {
         const tbody = document.getElementById('tableBody');
         const thead = document.getElementById('tableHead');
@@ -193,6 +224,7 @@
             }
             tbody.appendChild(tr);
         });
+        document.getElementById('pageTitle').innerText = currentFilter === 'cooperation' ? '🤝 合作物件 (團隊公海)' : '📁 個人管理：全部物件';
     }
 
     function openViewModal(idx) {
@@ -238,20 +270,9 @@
             partner: currentIdx !== null ? (cases[currentIdx].partner || null) : null,
             notes: currentIdx !== null ? (cases[currentIdx].notes || []) : []
         };
-        // 寫入 Firebase
         if (currentIdx === null) db.push(newData);
         else db.child(caseKeys[currentIdx]).set(newData);
         closeModal();
-    }
-
-    function requestCoop() {
-        if (!confirm("確定合作？")) return;
-        const item = cases[currentIdx];
-        item.partner = currentUser.acc;
-        if(!item.notes) item.notes = [];
-        item.notes.unshift({date: new Date().toLocaleString(), user: '系統', text: `[合作] ${currentUser.acc} 查閱資料。`});
-        db.child(caseKeys[currentIdx]).set(item);
-        openViewModal(currentIdx);
     }
 
     function addNote() {
@@ -264,7 +285,16 @@
         document.getElementById('new_note').value = "";
     }
 
-    // --- 其他 UI 控制函數 (與舊版相同) ---
+    function requestCoop() {
+        if (!confirm("確定合作？系統將留下足跡。")) return;
+        const item = cases[currentIdx];
+        item.partner = currentUser.acc;
+        if(!item.notes) item.notes = [];
+        item.notes.unshift({date: new Date().toLocaleString(), user: '系統', text: `[合作] ${currentUser.acc} 查閱資料。`});
+        db.child(caseKeys[currentIdx]).set(item);
+        openViewModal(currentIdx);
+    }
+
     function calcUnit() {
         const s = parseFloat(document.getElementById('m_size').value) || 0;
         const t = parseFloat(document.getElementById('m_total').value) || 0;
@@ -284,6 +314,16 @@
     function switchToEdit() {
         const item = cases[currentIdx];
         document.getElementById('m_case_name').value = item.case_name;
+        document.getElementById('m_community').value = item.community;
+        document.getElementById('m_name').value = item.name;
+        document.getElementById('m_phone').value = item.phone;
+        document.getElementById('m_addr').value = item.addr;
+        document.getElementById('m_h_addr').value = item.h_addr;
+        document.getElementById('m_size').value = item.size;
+        document.getElementById('m_p_type').value = item.p_type;
+        document.getElementById('m_total').value = item.total;
+        document.getElementById('m_p_price').value = item.p_price;
+        document.getElementById('m_unit').value = item.unit;
         document.getElementById('m_status').value = item.status;
         document.getElementById('viewMode').style.display = 'none'; document.getElementById('editMode').style.display = 'block';
     }
