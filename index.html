@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>寬悅團隊系統 - 完整管理版</title>
+    <title>寬悅團隊系統 - 完整功能版</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <style>
@@ -32,7 +32,7 @@
         .form-group { display: flex; flex-direction: column; margin-bottom: 10px; }
         .form-group label { font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #333; }
         .form-group input, .form-group select { padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
-        .readonly-val { font-size: 15px; font-weight: bold; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; color: #222; }
+        .readonly-val { font-size: 15px; font-weight: bold; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; color: #222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-orange { background: var(--main-orange); color: white; }
         .btn-danger { background: var(--danger); color: white; }
@@ -93,6 +93,7 @@
                     <button id="viewPhoneBtn" class="btn btn-blue" style="margin-top:5px; display:none;" onclick="requestCoop()">🔓 查看並合作</button>
                 </div>
             </div>
+            <div class="form-group"><label>同業網址</label><div id="v_web_url" class="readonly-val" style="color:#3498db; cursor:pointer;" onclick="openUrl()"></div></div>
             <div class="form-group"><label>物件地址</label><div id="v_addr" class="readonly-val"></div></div>
             <div class="form-group"><label>戶籍地址</label><div id="v_h_addr" class="readonly-val"></div></div>
             <div class="form-row">
@@ -113,6 +114,7 @@
                 <div class="form-group"><label>屋主姓名</label><input type="text" id="m_name"></div>
             </div>
             <div class="form-group"><label>聯絡電話</label><input type="text" id="m_phone"></div>
+            <div class="form-group"><label>同業網址</label><input type="text" id="m_web_url" placeholder="請貼上網址 (https://...)"></div>
             <div class="form-group"><label>物件地址</label><input type="text" id="m_addr"></div>
             <div class="form-group"><label>戶籍地址</label><input type="text" id="m_h_addr"></div>
             <div class="form-row">
@@ -124,6 +126,8 @@
                         <option value="坡道機械">坡道機械</option>
                         <option value="機械平面">機械平面</option>
                         <option value="機械機械">機械機械</option>
+                        <option value="塔式車位">塔式車位</option>
+                        <option value="子母車位">子母車位</option>
                     </select>
                 </div>
             </div>
@@ -152,6 +156,7 @@
 </div>
 
 <script>
+    // --- Firebase 配置 (請保持您原有的資訊) ---
     const firebaseConfig = {
         apiKey: "AIzaSyAvJmCv72H9Ic5taR7YCqwsU3kEgEV218g",
         authDomain: "kuanyue-crm.firebaseapp.com",
@@ -228,7 +233,7 @@
 
     function openAddModal() {
         currentIdx = null;
-        const fields = ['m_case_name','m_community','m_name','m_phone','m_addr','m_h_addr','m_size','m_p_price','m_total','m_unit','new_note'];
+        const fields = ['m_case_name','m_community','m_name','m_phone','m_addr','m_h_addr','m_size','m_p_price','m_total','m_unit','m_web_url','new_note'];
         fields.forEach(f => document.getElementById(f).value = "");
         document.getElementById('m_p_type').value = "無";
         document.getElementById('m_status').value = "tracking";
@@ -245,6 +250,7 @@
         const canSee = (currentUser.role === 'admin' || item.owner === currentUser.acc || item.partner === currentUser.acc);
         document.getElementById('v_case_name').innerText = item.case_name;
         document.getElementById('v_name').innerText = item.name;
+        document.getElementById('v_web_url').innerText = item.web_url || "無";
         document.getElementById('v_addr').innerText = canSee ? item.addr : "取得合作後解鎖";
         document.getElementById('v_h_addr').innerText = canSee ? item.h_addr : "取得合作後解鎖";
         document.getElementById('v_size_unit').innerText = `${item.size} 坪 / ${item.unit} 萬`;
@@ -261,22 +267,27 @@
         document.getElementById('caseModal').style.display = 'flex';
     }
 
+    function openUrl() {
+        const url = cases[currentIdx].web_url;
+        if(url && url.startsWith('http')) window.open(url, '_blank');
+    }
+
     function switchToEdit() {
         const item = cases[currentIdx];
         document.getElementById('editModalTitle').innerText = "✎ 編輯案件資料";
-        document.getElementById('m_case_name').value = item.case_name;
-        document.getElementById('m_community').value = item.community;
-        document.getElementById('m_name').value = item.name;
-        document.getElementById('m_phone').value = item.phone;
-        document.getElementById('m_addr').value = item.addr;
-        document.getElementById('m_h_addr').value = item.h_addr;
-        document.getElementById('m_size').value = item.size;
-        document.getElementById('m_p_type').value = item.p_type;
-        document.getElementById('m_total').value = item.total;
-        document.getElementById('m_p_price').value = item.p_price;
-        document.getElementById('m_unit').value = item.unit;
-        document.getElementById('m_status').value = item.status;
-        // 只有擁有者或管理員可刪除
+        document.getElementById('m_case_name').value = item.case_name || "";
+        document.getElementById('m_community').value = item.community || "";
+        document.getElementById('m_name').value = item.name || "";
+        document.getElementById('m_phone').value = item.phone || "";
+        document.getElementById('m_web_url').value = item.web_url || "";
+        document.getElementById('m_addr').value = item.addr || "";
+        document.getElementById('m_h_addr').value = item.h_addr || "";
+        document.getElementById('m_size').value = item.size || 0;
+        document.getElementById('m_p_type').value = item.p_type || "無";
+        document.getElementById('m_total').value = item.total || 0;
+        document.getElementById('m_p_price').value = item.p_price || 0;
+        document.getElementById('m_unit').value = item.unit || 0;
+        document.getElementById('m_status').value = item.status || "tracking";
         document.getElementById('delCaseBtn').style.display = (currentUser.role === 'admin' || item.owner === currentUser.acc) ? 'block' : 'none';
         document.getElementById('viewMode').style.display = 'none'; 
         document.getElementById('editMode').style.display = 'block';
@@ -295,6 +306,7 @@
             community: document.getElementById('m_community').value || "",
             name: document.getElementById('m_name').value || "",
             phone: document.getElementById('m_phone').value || "",
+            web_url: document.getElementById('m_web_url').value || "",
             addr: document.getElementById('m_addr').value || "",
             h_addr: document.getElementById('m_h_addr').value || "",
             size: document.getElementById('m_size').value || 0,
