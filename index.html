@@ -3,47 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>寬悅團隊系統 - 安全雲端版</title>
+    <title>寬悅團隊系統 - 完整管理版</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <style>
         :root { --main-orange: #ff4500; --bg-light: #f4f6f9; --danger: #e74c3c; }
         body { font-family: 'Microsoft JhengHei', sans-serif; background: var(--bg-light); margin: 0; display: flex; min-height: 100vh; }
-        
-        /* 登入頁面 */
         #loginPage { position: fixed; inset: 0; background: var(--main-orange); display: flex; justify-content: center; align-items: center; z-index: 2000; }
         .login-box { background: white; padding: 40px; border-radius: 15px; text-align: center; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .login-box input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        
-        /* 側邊欄 */
         .sidebar { width: 220px; background: white; border-right: 1px solid #ddd; position: fixed; height: 100%; display: flex; flex-direction: column; padding-top: 20px; }
         .user-tag { padding: 15px 20px; border-bottom: 1px solid #eee; margin-bottom: 10px; }
         .nav-label { padding: 0 20px; font-size: 11px; color: #999; margin-bottom: 5px; font-weight: bold; }
         .tab-btn { width: 100%; padding: 12px 20px; border: none; background: none; text-align: left; cursor: pointer; color: #555; font-weight: bold; border-left: 5px solid transparent; }
         .tab-btn.active { background: #fff0eb; color: var(--main-orange); border-left-color: var(--main-orange); }
-
-        /* 主內容 */
         .main-content { margin-left: 220px; flex: 1; display: flex; flex-direction: column; }
         header { background: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
+        .search-container { background: white; padding: 15px 30px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; }
+        .search-input { flex: 1; padding: 10px 15px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
         .container { padding: 25px; }
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         th { background: #fff5f0; color: var(--main-orange); padding: 15px; text-align: left; font-size: 14px; }
         td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
         tr:hover { background: #fffaf8; cursor: pointer; }
-
-        /* Modal 彈窗 */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: white; width: 95%; max-width: 800px; padding: 30px; border-radius: 15px; position: relative; max-height: 90vh; overflow-y: auto; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         .form-group { display: flex; flex-direction: column; margin-bottom: 10px; }
         .form-group label { font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #333; }
-        .form-group input, .form-group select, .form-group textarea { padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .form-group input, .form-group select { padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
         .readonly-val { font-size: 15px; font-weight: bold; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; color: #222; }
-
         .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-orange { background: var(--main-orange); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
         .btn-blue { background: #3498db; color: white; width: 100%; }
         .badge-coop { background: #fff0eb; color: var(--main-orange); padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .note-item { position: relative; font-size: 13px; border-bottom: 1px solid #eee; padding: 8px 0; }
+        .del-note { position: absolute; right: 0; top: 8px; color: #ccc; cursor: pointer; font-size: 16px; }
+        .del-note:hover { color: var(--danger); }
     </style>
 </head>
 <body>
@@ -72,6 +69,10 @@
 
     <div class="main-content">
         <header><h2 id="pageTitle">我的開發清單</h2><button class="btn btn-orange" onclick="openAddModal()">＋ 新增開發案件</button></header>
+        <div class="search-container">
+            <span>🔍 搜尋：</span>
+            <input type="text" id="tableSearch" class="search-input" placeholder="搜尋姓名、電話、案名、社區..." oninput="renderTable()">
+        </div>
         <div class="container"><table><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table></div>
     </div>
 </div>
@@ -105,7 +106,7 @@
         </div>
 
         <div id="editMode" style="display:none;">
-            <h3 style="color:var(--main-orange);">案件資料錄入</h3>
+            <h3 style="color:var(--main-orange);" id="editModalTitle">案件資料錄入</h3>
             <div class="form-group"><label>案名</label><input type="text" id="m_case_name"></div>
             <div class="form-row">
                 <div class="form-group"><label>社區名稱</label><input type="text" id="m_community"></div>
@@ -141,14 +142,16 @@
                     </select>
                 </div>
             </div>
-            <button class="btn btn-orange" style="width:100%; margin-top:10px;" onclick="saveCase()">儲存並送出</button>
-            <button class="btn" style="width:100%; margin-top:5px; background:#ddd;" onclick="switchToView()">取消</button>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button id="delCaseBtn" class="btn btn-danger" style="display:none;" onclick="deleteCase()">🗑️ 刪除物件</button>
+                <button class="btn btn-orange" style="flex:1;" onclick="saveCase()">儲存並送出</button>
+            </div>
+            <button class="btn" style="width:100%; margin-top:10px; background:#ddd;" onclick="switchToView()">取消</button>
         </div>
     </div>
 </div>
 
 <script>
-    // --- 1. Firebase 初始化 ---
     const firebaseConfig = {
         apiKey: "AIzaSyAvJmCv72H9Ic5taR7YCqwsU3kEgEV218g",
         authDomain: "kuanyue-crm.firebaseapp.com",
@@ -167,51 +170,48 @@
     let currentIdx = null;
     let currentFilter = 'all';
 
-    // --- 2. 安全登入驗證 (從資料庫抓取) ---
     async function handleLogin() {
         const acc = document.getElementById('loginAcc').value;
         const pass = document.getElementById('loginPass').value;
-
         if (!acc || !pass) { alert("請輸入帳號密碼"); return; }
-
         const userRef = firebase.database().ref('users/' + acc);
         try {
             const snapshot = await userRef.once('value');
             const userData = snapshot.val();
-
             if (userData && userData.pass === pass) {
                 currentUser = { acc: acc, ...userData };
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'flex';
-                document.getElementById('displayUser').innerText = acc + (userData.role==='admin'?' (管理員)':'');
-                
-                // 登入後啟動監聽
+                document.getElementById('displayUser').innerText = acc + (userData.role==='admin'?' (管)':'');
                 db.on('value', (snap) => {
                     const data = snap.val();
                     cases = data ? Object.values(data) : [];
                     caseKeys = data ? Object.keys(data) : [];
                     renderTable();
                 });
-            } else {
-                alert("帳號或密碼錯誤");
-            }
-        } catch (e) { alert("讀取權限失敗"); }
+            } else alert("密碼錯誤");
+        } catch (e) { alert("權限錯誤"); }
     }
 
-    // --- 3. 核心邏輯 (其餘功能不變) ---
     function renderTable() {
         const tbody = document.getElementById('tableBody');
-        const thead = document.getElementById('tableHead');
+        const searchTxt = document.getElementById('tableSearch').value.toLowerCase();
         tbody.innerHTML = '';
+        const thead = document.getElementById('tableHead');
         thead.innerHTML = currentFilter === 'cooperation' 
             ? `<tr><th>案名 / 社區</th><th>屋主</th><th>聯絡電話</th><th>夥伴</th></tr>`
             : `<tr><th>案名 / 社區</th><th>屋主</th><th>聯絡電話</th><th>總價/單價</th></tr>`;
 
         cases.forEach((item, idx) => {
-            const isMatch = (currentFilter === 'cooperation' && item.status === 'cooperation') ||
-                            (currentFilter === 'all' && item.owner === currentUser.acc && item.status !== 'cooperation') ||
-                            (item.owner === currentUser.acc && item.status === currentFilter);
-            if (!isMatch) return;
+            const isCategoryMatch = (currentFilter === 'cooperation' && item.status === 'cooperation') ||
+                                    (currentFilter === 'all' && item.owner === currentUser.acc && item.status !== 'cooperation') ||
+                                    (item.owner === currentUser.acc && item.status === currentFilter);
+            if (!isCategoryMatch) return;
+            const isSearchMatch = item.case_name.toLowerCase().includes(searchTxt) ||
+                                 item.community.toLowerCase().includes(searchTxt) ||
+                                 item.name.toLowerCase().includes(searchTxt) ||
+                                 item.phone.includes(searchTxt);
+            if (!isSearchMatch) return;
 
             const canSeeAll = (currentUser.role === 'admin' || item.owner === currentUser.acc || item.partner === currentUser.acc);
             const tr = document.createElement('tr');
@@ -224,14 +224,25 @@
             }
             tbody.appendChild(tr);
         });
-        document.getElementById('pageTitle').innerText = currentFilter === 'cooperation' ? '🤝 合作物件 (團隊公海)' : '📁 個人管理：全部物件';
+    }
+
+    function openAddModal() {
+        currentIdx = null;
+        const fields = ['m_case_name','m_community','m_name','m_phone','m_addr','m_h_addr','m_size','m_p_price','m_total','m_unit','new_note'];
+        fields.forEach(f => document.getElementById(f).value = "");
+        document.getElementById('m_p_type').value = "無";
+        document.getElementById('m_status').value = "tracking";
+        document.getElementById('delCaseBtn').style.display = 'none';
+        document.getElementById('editModalTitle').innerText = "✨ 新增開發案件";
+        document.getElementById('viewMode').style.display = 'none'; 
+        document.getElementById('editMode').style.display = 'block'; 
+        document.getElementById('caseModal').style.display = 'flex'; 
     }
 
     function openViewModal(idx) {
         currentIdx = idx;
         const item = cases[idx];
         const canSee = (currentUser.role === 'admin' || item.owner === currentUser.acc || item.partner === currentUser.acc);
-        
         document.getElementById('v_case_name').innerText = item.case_name;
         document.getElementById('v_name').innerText = item.name;
         document.getElementById('v_addr').innerText = canSee ? item.addr : "取得合作後解鎖";
@@ -239,12 +250,10 @@
         document.getElementById('v_size_unit').innerText = `${item.size} 坪 / ${item.unit} 萬`;
         document.getElementById('v_parking').innerText = `${item.p_type} / ${item.p_price} 萬`;
         document.getElementById('v_phone').innerText = canSee ? item.phone : "09********";
-        
         const viewBtn = document.getElementById('viewPhoneBtn');
         viewBtn.style.display = canSee ? 'none' : 'block';
         viewBtn.disabled = !!item.partner;
         viewBtn.innerText = item.partner ? `已被 ${item.partner} 鎖定` : "🔓 查看並合作";
-
         document.getElementById('noteArea').style.display = canSee ? 'block' : 'none';
         if(canSee) renderNotes(item.notes || []);
         document.getElementById('editBtn').style.display = (currentUser.role === 'admin' || item.owner === currentUser.acc) ? 'block' : 'none';
@@ -252,9 +261,37 @@
         document.getElementById('caseModal').style.display = 'flex';
     }
 
+    function switchToEdit() {
+        const item = cases[currentIdx];
+        document.getElementById('editModalTitle').innerText = "✎ 編輯案件資料";
+        document.getElementById('m_case_name').value = item.case_name;
+        document.getElementById('m_community').value = item.community;
+        document.getElementById('m_name').value = item.name;
+        document.getElementById('m_phone').value = item.phone;
+        document.getElementById('m_addr').value = item.addr;
+        document.getElementById('m_h_addr').value = item.h_addr;
+        document.getElementById('m_size').value = item.size;
+        document.getElementById('m_p_type').value = item.p_type;
+        document.getElementById('m_total').value = item.total;
+        document.getElementById('m_p_price').value = item.p_price;
+        document.getElementById('m_unit').value = item.unit;
+        document.getElementById('m_status').value = item.status;
+        // 只有擁有者或管理員可刪除
+        document.getElementById('delCaseBtn').style.display = (currentUser.role === 'admin' || item.owner === currentUser.acc) ? 'block' : 'none';
+        document.getElementById('viewMode').style.display = 'none'; 
+        document.getElementById('editMode').style.display = 'block';
+    }
+
+    function deleteCase() {
+        if (confirm("確定要刪除此物件嗎？此動作無法復原。")) {
+            db.child(caseKeys[currentIdx]).remove();
+            closeModal();
+        }
+    }
+
     function saveCase() {
         const newData = {
-            case_name: document.getElementById('m_case_name').value || "",
+            case_name: document.getElementById('m_case_name').value || "未命名案件",
             community: document.getElementById('m_community').value || "",
             name: document.getElementById('m_name').value || "",
             phone: document.getElementById('m_phone').value || "",
@@ -273,6 +310,24 @@
         if (currentIdx === null) db.push(newData);
         else db.child(caseKeys[currentIdx]).set(newData);
         closeModal();
+    }
+
+    function renderNotes(notes) {
+        document.getElementById('noteList').innerHTML = notes.map((n, i) => `
+            <div class="note-item">
+                <b style="color:var(--main-orange)">${n.user}</b> <small>${n.date}</small>
+                <div>${n.text}</div>
+                ${(currentUser.role === 'admin' || n.user === currentUser.acc) ? `<span class="del-note" onclick="deleteNote(${i})">&times;</span>` : ''}
+            </div>`).join('');
+    }
+
+    function deleteNote(noteIdx) {
+        if (confirm("確定刪除這條筆記？")) {
+            const item = cases[currentIdx];
+            item.notes.splice(noteIdx, 1);
+            db.child(caseKeys[currentIdx]).set(item);
+            renderNotes(item.notes);
+        }
     }
 
     function addNote() {
@@ -301,32 +356,15 @@
         const p = parseFloat(document.getElementById('m_p_price').value) || 0;
         document.getElementById('m_unit').value = s > 0 ? ((t - p) / s).toFixed(2) : 0;
     }
-    function renderNotes(notes) {
-        document.getElementById('noteList').innerHTML = notes.map(n => `<div style="font-size:13px; border-bottom:1px solid #eee; padding:5px 0;"><b style="color:var(--main-orange)">${n.user}</b> <small>${n.date}</small><div>${n.text}</div></div>`).join('');
-    }
     function setTab(s, el) { 
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); 
-        currentFilter = s; renderTable(); 
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); 
+        el.classList.add('active'); 
+        currentFilter = s; 
+        document.getElementById('pageTitle').innerText = (s==='cooperation'?'🤝 合作物件 (團隊公海)':'📁 個人管理：物件清單');
+        renderTable(); 
     }
     function closeModal() { document.getElementById('caseModal').style.display = 'none'; }
-    function openAddModal() { currentIdx = null; document.getElementById('viewMode').style.display = 'none'; document.getElementById('editMode').style.display = 'block'; document.getElementById('caseModal').style.display = 'flex'; }
     function switchToView() { document.getElementById('editMode').style.display = 'none'; document.getElementById('viewMode').style.display = 'block'; }
-    function switchToEdit() {
-        const item = cases[currentIdx];
-        document.getElementById('m_case_name').value = item.case_name;
-        document.getElementById('m_community').value = item.community;
-        document.getElementById('m_name').value = item.name;
-        document.getElementById('m_phone').value = item.phone;
-        document.getElementById('m_addr').value = item.addr;
-        document.getElementById('m_h_addr').value = item.h_addr;
-        document.getElementById('m_size').value = item.size;
-        document.getElementById('m_p_type').value = item.p_type;
-        document.getElementById('m_total').value = item.total;
-        document.getElementById('m_p_price').value = item.p_price;
-        document.getElementById('m_unit').value = item.unit;
-        document.getElementById('m_status').value = item.status;
-        document.getElementById('viewMode').style.display = 'none'; document.getElementById('editMode').style.display = 'block';
-    }
 </script>
 </body>
 </html>
