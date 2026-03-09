@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>寬悅團隊系統 - 行動優化版</title>
+    <title>寬悅團隊系統 - 導航優化版</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <style>
@@ -15,34 +15,28 @@
         .login-box { background: white; padding: 30px; border-radius: 15px; text-align: center; width: 85%; max-width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .login-box input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
 
-        /* 側邊欄 (電腦版顯示) */
+        /* 導航 */
         .sidebar { width: var(--sidebar-w); background: white; border-right: 1px solid #ddd; position: fixed; height: 100%; display: flex; flex-direction: column; padding-top: 20px; z-index: 100; }
-        
-        /* 手機版底部導航 (預設隱藏) */
         .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #ddd; z-index: 1000; height: 60px; justify-content: space-around; align-items: center; }
         .m-nav-item { flex: 1; text-align: center; font-size: 12px; color: #666; cursor: pointer; border: none; background: none; height: 100%; }
         .m-nav-item.active { color: var(--main-orange); font-weight: bold; }
 
-        /* 主內容區 */
+        /* 主內容 */
         .main-content { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; padding-bottom: 20px; }
-        header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; sticky: top; }
+        header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
         .search-container { background: white; padding: 10px 20px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 8px; }
         .search-input { flex: 1; padding: 10px 15px; border: 1px solid #ddd; border-radius: 20px; font-size: 14px; outline: none; }
 
-        /* 表格與卡片控制 */
+        /* 列表與卡片 */
         .container { padding: 15px; }
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         th { background: #fff5f0; color: var(--main-orange); padding: 12px; text-align: left; font-size: 14px; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
 
-        /* 手機適應 CSS */
         @media (max-width: 768px) {
             .sidebar { display: none; }
             .mobile-nav { display: flex; }
             .main-content { margin-left: 0; padding-bottom: 80px; }
-            header h2 { font-size: 18px; }
-            
-            /* 表格轉卡片 */
             table thead { display: none; }
             table, tbody, tr, td { display: block; width: 100%; box-sizing: border-box; }
             tr { margin-bottom: 15px; border: 1px solid #eee; border-radius: 10px; padding: 5px; }
@@ -51,23 +45,30 @@
             .tr-case-name { font-size: 16px; color: var(--main-orange); font-weight: bold; }
         }
 
-        /* Modal 樣式 */
+        /* 彈窗 */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); justify-content: center; align-items: flex-end; z-index: 2000; }
         .modal-content { background: white; width: 100%; max-width: 800px; padding: 25px; border-radius: 20px 20px 0 0; max-height: 92vh; overflow-y: auto; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .form-group { display: flex; flex-direction: column; margin-bottom: 12px; }
         .form-group label { font-size: 12px; font-weight: bold; color: #666; margin-bottom: 4px; }
         .form-group input, .form-group select, .form-group textarea { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
-        .readonly-val { font-size: 16px; font-weight: bold; border-bottom: 1px solid #f0f0f0; padding: 5px 0; min-height: 24px; word-break: break-all; }
         
+        /* 唯讀欄位樣式 */
+        .readonly-val { font-size: 16px; font-weight: bold; border-bottom: 1px solid #f0f0f0; padding: 5px 0; min-height: 24px; word-break: break-all; }
+        /* 可點擊地址樣式 */
+        .map-link { color: #3498db; text-decoration: underline; cursor: pointer; }
+
         .btn { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 15px; }
         .btn-orange { background: var(--main-orange); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-blue { background: #3498db; color: white; width: 100%; }
         .badge-coop { background: #fff0eb; color: var(--main-orange); padding: 2px 6px; border-radius: 4px; font-size: 11px; }
 
-        /* 筆記樣式 */
         .note-item { position: relative; background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--main-orange); }
+        .tab-btn { width: 100%; padding: 12px 20px; border: none; background: none; text-align: left; cursor: pointer; color: #555; font-weight: bold; border-left: 5px solid transparent; }
+        .tab-btn.active { background: #fff0eb; color: var(--main-orange); border-left-color: var(--main-orange); }
+        .user-tag { padding: 15px 20px; border-bottom: 1px solid #eee; margin-bottom: 10px; }
+        .nav-label { padding: 0 20px; font-size: 11px; color: #999; margin-bottom: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -137,8 +138,8 @@
                 </div>
             </div>
             <div class="form-group"><label>同業網址 (點擊開啟)</label><div id="v_web_url" class="readonly-val" style="color:#3498db; text-decoration: underline;" onclick="openUrl()"></div></div>
-            <div class="form-group"><label>物件地址</label><div id="v_addr" class="readonly-val"></div></div>
-            <div class="form-group"><label>戶籍地址</label><div id="v_h_addr" class="readonly-val"></div></div>
+            <div class="form-group"><label>物件地址 (點擊導航)</label><div id="v_addr" class="readonly-val map-link" onclick="openMap('v_addr')"></div></div>
+            <div class="form-group"><label>戶籍地址 (點擊導航)</label><div id="v_h_addr" class="readonly-val map-link" onclick="openMap('v_h_addr')"></div></div>
             <div class="form-row">
                 <div class="form-group"><label>坪數/單價</label><div id="v_size_unit" class="readonly-val"></div></div>
                 <div class="form-group"><label>車位資訊</label><div id="v_parking" class="readonly-val"></div></div>
@@ -146,8 +147,8 @@
             
             <div id="noteArea" style="margin-top:15px; border-top: 1px solid #eee; padding-top: 15px;">
                 <h4 style="margin: 0 0 10px 0;">跟進筆記</h4>
-                <div id="noteList" style="max-height:200px; overflow-y:auto; margin-bottom:10px;"></div>
-                <textarea id="new_note" placeholder="輸入筆記內容..." style="width:100%; height: 60px; border:1px solid #ddd; border-radius: 8px; padding: 10px; box-sizing: border-box;"></textarea>
+                <div id="noteList" style="max-height:180px; overflow-y:auto; margin-bottom:10px;"></div>
+                <textarea id="new_note" placeholder="輸入筆記..." style="width:100%; height: 60px; border:1px solid #ddd; border-radius: 8px; padding: 10px; box-sizing: border-box;"></textarea>
                 <button class="btn btn-orange" style="width:100%; margin-top:8px;" onclick="addNote()">儲存筆記</button>
             </div>
         </div>
@@ -203,7 +204,7 @@
 </div>
 
 <script>
-    // --- Firebase 配置 (請保持您原有的資訊) ---
+    // --- Firebase 配置 ---
     const firebaseConfig = {
         apiKey: "AIzaSyAvJmCv72H9Ic5taR7YCqwsU3kEgEV218g",
         authDomain: "kuanyue-crm.firebaseapp.com",
@@ -250,7 +251,6 @@
         tbody.innerHTML = '';
         const thead = document.getElementById('tableHead');
         
-        // 電腦版表頭
         thead.innerHTML = currentFilter === 'cooperation' 
             ? `<tr><th>案名/社區</th><th>屋主</th><th>電話</th><th>夥伴</th></tr>`
             : `<tr><th>案名/社區</th><th>屋主</th><th>電話</th><th>總價/單價</th></tr>`;
@@ -271,7 +271,6 @@
             tr.onclick = () => openViewModal(idx);
             
             if (window.innerWidth <= 768) {
-                // 手機卡片格式
                 tr.innerHTML = `
                     <td class="tr-case-name">${item.case_name} <small style="color:#666">(${item.community})</small></td>
                     <td data-label="屋主">${item.name}</td>
@@ -281,7 +280,6 @@
                     </td>
                 `;
             } else {
-                // 電腦表格格式
                 if (currentFilter === 'cooperation') {
                     tr.innerHTML = `<td><b>${item.case_name}</b><br><small>${item.community}</small></td><td>${item.name}</td><td>${canSeeAll ? item.phone : '09********'}</td><td><span class="badge-coop">${item.partner || '開放中'}</span></td>`;
                 } else {
@@ -310,8 +308,21 @@
         document.getElementById('v_case_name').innerText = item.case_name;
         document.getElementById('v_name').innerText = item.name;
         document.getElementById('v_web_url').innerText = item.web_url || "無";
-        document.getElementById('v_addr').innerText = canSee ? item.addr : "解鎖後查看";
-        document.getElementById('v_h_addr').innerText = canSee ? item.h_addr : "解鎖後查看";
+        
+        // 地址顯示控制
+        const addrText = canSee ? (item.addr || "無") : "解鎖後查看";
+        const hAddrText = canSee ? (item.h_addr || "無") : "解鎖後查看";
+        
+        const addrEl = document.getElementById('v_addr');
+        const hAddrEl = document.getElementById('v_h_addr');
+        
+        addrEl.innerText = addrText;
+        hAddrEl.innerText = hAddrText;
+
+        // 如果不能看，移除可點擊樣式
+        if (!canSee || addrText === "無") addrEl.classList.remove('map-link'); else addrEl.classList.add('map-link');
+        if (!canSee || hAddrText === "無") hAddrEl.classList.remove('map-link'); else hAddrEl.classList.add('map-link');
+
         document.getElementById('v_size_unit').innerText = `${item.size} 坪 / ${item.unit} 萬`;
         document.getElementById('v_parking').innerText = `${item.p_type} / ${item.p_price} 萬`;
         document.getElementById('v_phone').innerText = canSee ? item.phone : "09********";
@@ -328,6 +339,14 @@
         document.getElementById('caseModal').style.display = 'flex';
     }
 
+    // 開啟地圖功能
+    function openMap(elementId) {
+        const addr = document.getElementById(elementId).innerText;
+        if (addr && addr !== "無" && addr !== "解鎖後查看") {
+            window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`, '_blank');
+        }
+    }
+
     function openUrl() {
         const url = cases[currentIdx].web_url;
         if(url && url.startsWith('http')) window.open(url, '_blank');
@@ -341,8 +360,8 @@
         document.getElementById('m_name').value = item.name;
         document.getElementById('m_phone').value = item.phone;
         document.getElementById('m_web_url').value = item.web_url || "";
-        document.getElementById('m_addr').value = item.addr;
-        document.getElementById('m_h_addr').value = item.h_addr;
+        document.getElementById('m_addr').value = item.addr || "";
+        document.getElementById('m_h_addr').value = item.h_addr || "";
         document.getElementById('m_size').value = item.size;
         document.getElementById('m_p_type').value = item.p_type;
         document.getElementById('m_total').value = item.total;
@@ -434,8 +453,6 @@
         renderTable(); 
     }
     function closeModal() { document.getElementById('caseModal').style.display = 'none'; }
-    
-    // 監聽視窗縮放以切換顯示
     window.addEventListener('resize', renderTable);
 </script>
 </body>
